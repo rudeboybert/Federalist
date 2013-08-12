@@ -1,0 +1,16 @@
+{
+    "contents" : "## This R script preprocesses the file federalist_papers.txt\n\n",
+    "created" : 1376337780774.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "852851804",
+    "id" : "A98A6D73",
+    "lastKnownWriteTime" : 1376337823,
+    "path" : "~/Documents/Projects/Federalist/preprocess.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
