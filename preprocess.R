@@ -152,3 +152,7 @@ madison.list <-
     "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", 
     "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON"
   )
+
+
+
+sapply(gregexpr("\\W+", fed.papers.list[[1]][1]), length) + 1
