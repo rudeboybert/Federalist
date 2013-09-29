@@ -2,6 +2,23 @@
 ## http://thomas.loc.gov/home/histdox/fedpaper.txt
 ## Page 5 of http://writing.mit.edu/sites/writing.mit.edu/files/Who%20Wrote%20the%20Federalist%20Papers.pdf
 
+# Notes:
+# Federalist 10 & 51 have to do with factions.  How despite what Montesquieu argued in
+# his "The Spirit of the Laws", republican government CAN work for a large hetereo-
+# geneous population, since the bigger the nation, the more room for factions whose
+# interests can offset each other.  
+
+# Federalist 39
+# jurisdictino of the national government extends to certain enumerated objects only
+# and leave to the several states a residuary and inviolable sovereignty over all other
+# objectsar
+
+# Federalist 45
+# The powers delegated by the proposed Constitution to the federal government are 
+# few and defined.
+
+
+
 fed.papers <- scan("pg1404.txt", "character", sep="\n", blank.lines.skip = FALSE)
 
 
