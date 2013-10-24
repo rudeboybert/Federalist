@@ -5,6 +5,7 @@
 # Load libraries needed for language processing + data
 library(openNLP) ## Loads the package for use in the task
 library(openNLPmodels.en) ## Loads the model files for the English language
+library(ggplot2)
 load("federalist.RData")
 n.essays <- length(fed.papers)
 
@@ -77,7 +78,7 @@ for (i in 1:n.essays) {
         vector(length=n.words, mode="list")
       
       for (l in 1:n.words){
-        char.count[[i]][[j]][[k]][[l]] <- nchar(words)
+        char.count[[i]][[j]][[k]][[l]] <- nchar(words[l])
       }
     }
   }
@@ -113,170 +114,60 @@ round(cor(n.per.essay[hamilton.index, ]), 3)
 round(cor(n.per.essay[-hamilton.index, ]), 3)
 
 
+#
+# Per paragraph metrics.  Are these really interesting?  Seems kind of arbitray
+# as to how people cut up paragraphs
+#
 
 
+#
+# Per sentence metrics:  average sentence length
+#
+# Words per sentence.  Hard to figure out how to keep the exchangeable units 
+# intact
+n.word <- unlist(word.count[undisputed])
+n.word <- unlist(n.word)
+
+n.sen <- sen.count[undisputed]
+n.sen <- lapply(n.sen, unlist)
+n.sen <- lapply(n.sen, sum)
+n.sen <- unlist(n.sen)
+authors.sen <- rep(authors, times=n.sen)
+
+boxplot(n.word ~ authors.sen, horizontal=TRUE, xlab="# of words per sentence")
+
+temp <- data.frame(n.word=n.word, author=authors.sen)
+ggplot(temp, aes(x=n.word)) +  geom_histogram(aes(y=..density..), binwidth=5) + 
+  facet_grid(author ~ .)
+ggplot(temp, aes(x=n.word, fill=author)) + 
+  geom_histogram(aes(y=..density..), binwidth=5, alpha=.5, position="identity")
 
 
+#
+# Per word metrics:  average char per word
+#
+n.char <- unlist(unlist(unlist(char.count[undisputed])))
+
+n.word <- word.count[undisputed]
+n.word <- unlist(n.word)
+
+authors.word <- 
+  rep(authors, 
+      times=unlist(lapply(lapply(word.count[undisputed], unlist), sum))
+  )
+
+boxplot(n.char ~ authors.word, horizontal=TRUE, xlab="# of characters per word")
+
+temp <- data.frame(n.char=n.char, author=authors.word)
+ggplot(temp, aes(x=n.char)) +  geom_histogram(aes(y=..density..), binwidth=5) + 
+  facet_grid(author ~ .)
+ggplot(temp, aes(x=n.char, fill=author)) + 
+  geom_histogram(aes(y=..density..), binwidth=5, alpha=.5, position="identity")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Number of words per paragraph
-words.per.paragraph <- vector(length=n.essays, mode='list')
-sentences.per.paragraph <- vector(length=n.essays, mode='list')
-letters.per.paragraph <- vector(length=n.essays, mode='list')
-
-for (i in 1:n.essays){
-  n.para <- length(fed.papers.list[[i]])
-  
-  num.sent <- rep(0, n.para)
-  num.char <- rep(0, n.para)
-  for (j in 1:n.para){
-    num.sent[j] <- 
-      length(sentDetect(fed.papers.list[[i]][j], language="en"))
-    
-    text <- gsub("[[:punct:]]", "", fed.papers.list[[i]][[j]])
-    text <- unlist(strsplit(text, " "))
-    num.char[j] <- sum(nchar(text))
-  }
-  sentences.per.paragraph[[i]] <- num.sent
-  letters.per.paragraph[[i]] <- num.char
-  
-  words.per.paragraph[[i]] <- 
-    sapply(gregexpr("\\W+", fed.papers.list[[i]]), length)
-}
-
-# Words per essay
-paragraphs.per.essay <- unlist(lapply(fed.papers.list,length))
-sentences.per.essay <- unlist(lapply(sentences.per.paragraph, sum))
-words.per.essay <- unlist(lapply(words.per.paragraph, sum))
-letters.per.essay <- unlist(lapply(letters.per.paragraph, sum))
-
-
-counts <- words.per.essay
-title <- "number of words per essay"
-
-counts <- paragraphs.per.essay
-title <- "number of paragraphs per essay"
-
-counts <- sentences.per.essay
-title <- "number of sentences per essay"
-
-data.1 <- counts[hamilton]
-data.2 <- counts[madison]
-
-
-
-words.per.sentence.hamilton <- NULL
-for (i in 1:length(hamilton)) {
-  words.per.sentence.hamilton <- 
-    c(words.per.sentence.hamilton,
-      words.per.paragraph[[hamilton[i]]] / 
-        sentences.per.paragraph[[hamilton[i]]]
-    )
-}
-words.per.sentence.madison <- NULL
-for (i in 1:length(madison)) {
-  words.per.sentence.madison <- 
-    c(words.per.sentence.madison,
-      words.per.paragraph[[madison[i]]] / 
-        sentences.per.paragraph[[madison[i]]]
-    )
-}
-data.1 <- words.per.sentence.hamilton
-data.2 <- words.per.sentence.madison
-title <- "Words per sentence"
-
-
-
-
-
-
-letters.per.word.hamilton <- NULL
-for (i in 1:length(hamilton)) {
-  letters.per.word.hamilton <- 
-    c(letters.per.word.hamilton,
-      letters.per.paragraph[[hamilton[i]]] / 
-        words.per.paragraph[[hamilton[i]]]
-    )
-}
-letters.per.word.madison <- NULL
-for (i in 1:length(madison)) {
-  letters.per.word.madison <- 
-    c(letters.per.word.madison,
-      letters.per.paragraph[[madison[i]]] / 
-        words.per.paragraph[[madison[i]]]
-    )
-}
-data.1 <- letters.per.word.hamilton
-data.2 <- letters.per.word.madison
-title <- "Words per sentence"
-
-
-
-
-
-
-hist.total <- hist(c(data.1, data.2), prob=TRUE, breaks=60)
-hist.1 <- hist(data.1, probability=TRUE, breaks=hist.total$breaks)
-hist.2 <- hist(data.2, prob=TRUE, breaks=hist.total$breaks)
-
-hist(data.1, 
-     breaks=hist.total$breaks, col='cyan',
-     border='cyan', 
-     ylim=c(0,max(hist.1$density, hist.2$density)),
-     prob=TRUE,
-     xlab=title, main=title
-)
-hist(data.2, prob=TRUE, 
-     breaks=hist.total$breaks, add=T)
-legend("topright", 
-       legend=c("Hamilton", "Madison"), 
-       fill=c("cyan", "white"),
-       bty='n')
-
-
-
-
-# Regression
-essay.sub <- c(hamilton, madison)
-n.paragraphs.sub <- n.paragraphs[essay.sub]
-words.per.essay.sub <- words.per.essay[essay.sub]
-authors.sub <- c(rep("Hamilton", length(hamilton)), rep("Madison", length(madison)))
-init.sub <- c(rep("H", length(hamilton)), rep("M", length(madison)))
-
-
-plot(n.paragraphs.sub, words.per.essay.sub, type='n',
-     xlab="paragraphs per essay", ylab="Words per essay")
-text(jitter(n.paragraphs.sub, 1.5), 
-     jitter(words.per.essay.sub, 1.5),
-     paste(init.sub, essay.sub, sep=""),
-     col=c(rep("black", length(hamilton)), rep("red", length(madison))),     
-)
-regression <- lm(words.per.essay.sub ~ n.paragraphs.sub)
-abline(regression, lty=2)
-
-boxplot(resid(regression)~authors.sub)
-
-temp <- words.per.essay/sentences.per.essay
-boxplot(temp[c(hamilton,madison)]~authors.sub, horizontal=TRUE)
-boxplot(temp~hamilton.list, horizontal=TRUE)
-
-
-
+#
 # Figure out which words used in each
+#
 hamilton.text <- NULL
 madison.text <- NULL
 
