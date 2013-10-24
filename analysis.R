@@ -144,7 +144,7 @@ ggplot(temp, aes(x=n.word, fill=author)) +
 
 
 #
-# Per word metrics:  average char per word
+# Per word metrics:  average char per word.  Is this useful?
 #
 n.char <- unlist(unlist(unlist(char.count[undisputed])))
 
@@ -165,6 +165,7 @@ ggplot(temp, aes(x=n.char, fill=author)) +
   geom_histogram(aes(y=..density..), binwidth=5, alpha=.5, position="identity")
 
 
+
 #
 # Figure out which words used in each
 #
@@ -172,7 +173,7 @@ hamilton.text <- NULL
 madison.text <- NULL
 
 for (i in 1:n.essays) {
-  text <- unlist(fed.papers.list[[i]])
+  text <- unlist(fed.papers[[i]])
   text <- tolower(text)
   text <- gsub("[[:punct:]]", "", text)
   text <- unlist(strsplit(text, " "))
