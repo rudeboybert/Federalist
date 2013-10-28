@@ -2,13 +2,9 @@
 # Analysis on Federalist Papers
 #
 
-# Load libraries needed for language processing + data
-library(openNLP) ## Loads the package for use in the task
-library(openNLPmodels.en) ## Loads the model files for the English language
 library(ggplot2)
 load("federalist.RData")
 n.essays <- length(fed.papers)
-
 
 #
 # Focus for now on 69 out of 85 essays whose authorship is not disputed
@@ -35,164 +31,158 @@ jay.index <- which(authors=="Jay")
 
 
 #
-# Store in nested tree/list structures the
-# paragraph <- sentence <- word <- character counts
-# Note:
-# -sentences are cut using sentDetect function from package
-# -all words dropped to lower case for counting purposes
-# -words are assumed to be delineated by spaces
-# -all punctuation dropped to count words.  This is an issue for Hamilton in
-#  particular since he used words like "well-behaved" a few times
-par.count <- sen.count <- word.count <- char.count <- 
-  vector(length=n.essays, mode="list")
-
-for (i in 1:n.essays) {
-  essay <- fed.papers[[i]]
-  n.par <- length(essay)
-  par.count[[i]] <- n.par
-  
-  # Further nested lists
-  sen.count[[i]] <- word.count[[i]] <- char.count[[i]] <-
-    vector(length=n.par, mode="list")  
-  
-  for (j in 1:n.par) {
-    par <- essay[[j]]
-    sentences <- sentDetect(par, language="en")
-    n.sen <- length(sentences)
-    sen.count[[i]][[j]] <- n.sen
-    
-    # Further nested lists
-    word.count[[i]][[j]] <- char.count[[i]][[j]] <- 
-      vector(length=n.sen, mode="list") 
-    
-    for (k in 1:n.sen) {
-      sen <- sentences[[k]]
-      sen <- tolower(sen)
-      sen <- gsub("[[:punct:]]", "", sen)
-      words <- unlist(strsplit(sen, " "))
-      n.words <- length(words)
-      word.count[[i]][[j]][[k]] <- n.words
-      
-      # Further nested lists
-      char.count[[i]][[j]][[k]] <- 
-        vector(length=n.words, mode="list")
-      
-      for (l in 1:n.words){
-        char.count[[i]][[j]][[k]][[l]] <- nchar(words[l])
-      }
-    }
-  }
-}
-
-
-#
 # Per essay metrics.  Nothing sexy except John Jay didn't do shit
 #
-n.par <- unlist(par.count[undisputed]) 
-boxplot(n.par ~ authors, horizontal=TRUE, xlab="# of paragraphs per essay")
+n.par.per.essay <- unlist(par.count[undisputed]) 
+boxplot(n.par.per.essay ~ authors, horizontal=TRUE, 
+        xlab="# of paragraphs per essay")
 
-n.sen <- lapply(sen.count[undisputed], unlist)
-n.sen <- lapply(n.sen, sum)
-n.sen <- unlist(n.sen)
-boxplot(n.sen ~ authors, horizontal=TRUE, xlab="# of sentences per essay")
+n.sen.per.essay <- lapply(sen.count[undisputed], unlist)
+n.sen.per.essay <- lapply(n.sen.per.essay, sum)
+n.sen.per.essay <- unlist(n.sen.per.essay)
+boxplot(n.sen.per.essay ~ authors, horizontal=TRUE, 
+        xlab="# of sentences per essay")
 
-n.word <- lapply(word.count[undisputed], function(x){lapply(x, unlist)})
-n.word <- lapply(n.word, function(x){lapply(x, sum)})
-n.word <- lapply(n.word, unlist)
-n.word <- lapply(n.word, sum)
-n.word <- unlist(n.word)
-boxplot(n.word ~ authors, horizontal=TRUE, xlab="# of words per essay")
+n.word.per.essay <- lapply(word.count[undisputed], function(x){lapply(x, unlist)})
+n.word.per.essay <- lapply(n.word.per.essay, unlist)
+n.word.per.essay <- lapply(n.word.per.essay, sum)
+n.word.per.essay <- unlist(n.word.per.essay)
+boxplot(n.word.per.essay ~ authors, horizontal=TRUE, xlab="# of words per essay")
 
-# Character per essay part too much useless info
-# lapply(char.count, function(x){lapply(x, function(y){lapply(y, unlist)})})
+n.char.per.essay <- lapply(char.count[undisputed], function(x){lapply(x, unlist)})
+n.char.per.essay <- lapply(n.char.per.essay, unlist)
+n.char.per.essay <- lapply(n.char.per.essay, sum)
+n.char.per.essay <- unlist(n.char.per.essay)
+boxplot(n.char.per.essay ~ authors, horizontal=TRUE, 
+        xlab="# of (non-space) characters per essay")
+
+# # of total words and sentences
+n.sen <- sum(n.sen.per.essay)
+n.word <- sum(n.word.per.essay)
+n.char <- sum(n.char.per.essay)
 
 # Obviously highly correlated
-n.per.essay <- data.frame(n.par=n.par, n.sen=n.sen, n.word=n.word)
+n.per.essay <- data.frame(n.par=n.par.per.essay, n.sen=n.sen.per.essay, 
+                        n.word=n.word.per.essay)
 round(cor(n.per.essay), 3)
 
+# Lower correlations for non-Hamilton essays.  what is variance of correlations?
 round(cor(n.per.essay[hamilton.index, ]), 3)
 round(cor(n.per.essay[-hamilton.index, ]), 3)
-
-
-#
-# Per paragraph metrics.  Are these really interesting?  Seems kind of arbitray
-# as to how people cut up paragraphs
-#
-
 
 #
 # Per sentence metrics:  average sentence length
 #
 # Words per sentence.  Hard to figure out how to keep the exchangeable units 
 # intact
-n.word <- unlist(word.count[undisputed])
-n.word <- unlist(n.word)
+n.word.per.sen <- unlist(word.count[undisputed])
+n.word.per.sen <- unlist(n.word.per.sen)
+# sanity check:  check number of sentences
+stopifnot(n.sen == length(n.word.per.sen))
 
-n.sen <- sen.count[undisputed]
-n.sen <- lapply(n.sen, unlist)
-n.sen <- lapply(n.sen, sum)
-n.sen <- unlist(n.sen)
-authors.sen <- rep(authors, times=n.sen)
+# For each sentence associate author
+authors.sen <- rep(authors, times=n.sen.per.essay)
 
-boxplot(n.word ~ authors.sen, horizontal=TRUE, xlab="# of words per sentence")
+# Compare average # of words per sentence
+word.per.sen <- data.frame(n.word=n.word.per.sen, author=authors.sen)
+# ggplot(word.per.sen, aes(x=n.word)) + geom_histogram(aes(y=..density..), binwidth=5) + 
+#   facet_grid(author ~ .)
+# ggplot(word.per.sen, aes(x=n.word, fill=author)) + 
+#   geom_histogram(aes(y=..density..), binwidth=5, alpha=.5, position="identity")
+boxplot(n.word.per.sen ~ authors.sen, horizontal=TRUE, 
+        xlab="# of words per sentence")
+ggplot(word.per.sen, aes(n.word)) +
+  geom_freqpoly(aes(y=..density.., group = author, colour = author), binwidth=10) +
+  xlim(0,100) + ylab("proportion of sentences") + xlab("words per sentence")
+model.word.per.sen <- lm(n.word.per.sen ~ authors.sen)
+summary(model.word.per.sen)
 
-temp <- data.frame(n.word=n.word, author=authors.sen)
-ggplot(temp, aes(x=n.word)) +  geom_histogram(aes(y=..density..), binwidth=5) + 
-  facet_grid(author ~ .)
-ggplot(temp, aes(x=n.word, fill=author)) + 
-  geom_histogram(aes(y=..density..), binwidth=5, alpha=.5, position="identity")
 
 
 #
 # Per word metrics:  average char per word.  Is this useful?
 #
-n.char <- unlist(unlist(unlist(char.count[undisputed])))
+n.char.per.word <- lapply(char.count[undisputed], function(x){lapply(x, unlist)})
+n.char.per.word <- lapply(n.char.per.word, unlist)
+n.char.per.word <- unlist(n.char.per.word)
+# sanity check:  check number of sentences
+stopifnot(n.char == sum(n.char.per.word))
 
-n.word <- word.count[undisputed]
-n.word <- unlist(n.word)
-
-authors.word <- 
-  rep(authors, 
-      times=unlist(lapply(lapply(word.count[undisputed], unlist), sum))
-  )
-
-boxplot(n.char ~ authors.word, horizontal=TRUE, xlab="# of characters per word")
-
-temp <- data.frame(n.char=n.char, author=authors.word)
-ggplot(temp, aes(x=n.char)) +  geom_histogram(aes(y=..density..), binwidth=5) + 
-  facet_grid(author ~ .)
-ggplot(temp, aes(x=n.char, fill=author)) + 
-  geom_histogram(aes(y=..density..), binwidth=5, alpha=.5, position="identity")
+# For each word associate author
+authors.word <- rep(authors, times=n.word.per.essay)
+boxplot(n.char.per.word ~ authors.word, horizontal=TRUE, 
+        xlab="# of characters per word")
+char.per.word <- data.frame(n.char=n.char.per.word, author=authors.word)
+ggplot(char.per.word, aes(n.char)) +
+  geom_freqpoly(aes(y=..density.., group = author, colour = author), binwidth=1) +
+  xlim(0,15) + ylab("proportion of words") + xlab("word length")
+model.char.per.word <- lm(n.char.per.word ~ authors.word)
+summary(model.char.per.word)
 
 
 
 #
-# Figure out which words used in each
+# Figure out which words were used by each author
 #
-hamilton.text <- NULL
-madison.text <- NULL
+ham.words <- NULL
+mad.words <- NULL
+jay.words <- NULL
+all.words <- NULL
 
-for (i in 1:n.essays) {
-  text <- unlist(fed.papers[[i]])
-  text <- tolower(text)
-  text <- gsub("[[:punct:]]", "", text)
-  text <- unlist(strsplit(text, " "))
+# Compile all words
+n.word.per.essay.2 <- rep(0,length(undisputed))
+for (i in 1:length(undisputed)) {
+  essay.num <- undisputed[i]
+  words <- unlist(fed.papers[[essay.num]])
+  words <- tolower(words)
+  words <- gsub("[[:punct:]]", " ", words)
+  words <- unlist(strsplit(words, " "))
+  words <- words[!words == ""]
+  words <- words[!words == " "]
   
-  if (is.element(i, hamilton))
-    hamilton.text <- c(hamilton.text, text)
+  if (is.element(i, hamilton.index))
+    ham.words <- c(ham.words, words)
   
-  if (is.element(i, madison))
-    madison.text <- c(madison.text, text) 
+  if (is.element(i, madison.index))
+    mad.words <- c(mad.words, words) 
+
+  if (is.element(i, jay.index))
+    jay.words <- c(jay.words, words)
+  
+  n.word.per.essay.2[i] <- length(words)
+  all.words <- c(all.words, words)
 }
 
-hamilton.freq <- sort(table(hamilton.text), decreasing=TRUE)
-n.words.hamilton <- sum(hamilton.freq)
-hamilton.freq <- hamilton.freq/n.words.hamilton
-madison.freq <- sort(table(madison.text), decreasing=TRUE)
-n.words.madison <- sum(madison.freq)
-madison.freq <- madison.freq/n.words.madison
+# Sanity check number of words per essay
+stopifnot(all(n.word.per.essay.2 == n.word.per.essay))
+rm(n.word.per.essay.2)
+
+stopifnot(all(
+  c(length(ham.words), length(jay.words), length(mad.words))
+  == tapply(n.word.per.essay, authors, sum)
+))
+
+# Compute frequencies
+ham.freq <- sort(table(ham.words), decreasing=TRUE)
+n.words.ham <- sum(ham.freq)
+ham.freq <- ham.freq/n.words.ham
+
+mad.freq <- sort(table(mad.words), decreasing=TRUE)
+n.words.mad <- sum(mad.freq)
+mad.freq <- mad.freq/n.words.mad
+
+jay.freq <- sort(table(jay.words), decreasing=TRUE)
+n.words.jay <- sum(jay.freq)
+jay.freq <- jay.freq/n.words.jay
+
+all.freq <- sort(table(all.words), decreasing=TRUE)
+n.words.all <- sum(all.freq)
+all.freq <- all.freq/n.words.all
 
 
+
+# Create list of "uninteresting" words.  Some judgement calls here.  Have to
+# also consider those words I left in, like "we"
 uninteresting.words <- 
   c("the", "of", "to", "and", "in", "a", "be", "that", "it", "is", "by", 
     "which", "as", "on", "have", "for", "not", "this", "will", "their",
@@ -200,33 +190,77 @@ uninteresting.words <-
     "has", "its", "these", "them", "than", "so", "such", "if", "any", "at",
     "into", "was", "had", "were", "who", "those", "each", "but", "upon",
     "only", "too", "when", "though", "much", "even", "also", "therefore",
-    "very")
+    "very", "what", "without",
+    # Dicier words to remove. Focus in on topics/subjects/themes
+    "we", "all", "no", "more", "most", "his", "he", "either", "there",
+    "can", "most", "every", "under", "could", "some")
 
-madison.freq <- madison.freq[!is.element(names(madison.freq), uninteresting.words)]
-hamilton.freq <- hamilton.freq[!is.element(names(hamilton.freq), uninteresting.words)]
-
-madison.freq[1:50]*100
-hamilton.freq[1:50]*100
-
-plot(hamilton.freq, log='xy', type='n', xlab="ith word",
-     ylab="word frequency")
-lines(madison.freq, col="black", pch='.')
-lines(hamilton.freq, col="red", pch='.')
-legend("topright", 
-       legend=c("Madison", "Hamilton"), 
-       col=c("black", "red"),
-       lty=c(1,1),
-       bty='n')
-
-n.words <- 100
-top.hamilton.words <- names(hamilton.freq)[1:n.words]
-top.madison.words <- names(madison.freq)[1:n.words]
-
-# hamilton used but not madison
-setdiff(top.hamilton.words, top.madison.words)
-# madison used but not hamilton
-setdiff(top.madison.words, top.hamilton.words)
+mad.freq <- mad.freq[!is.element(names(mad.freq), uninteresting.words)]
+ham.freq <- ham.freq[!is.element(names(ham.freq), uninteresting.words)]
+jay.freq <- jay.freq[!is.element(names(jay.freq), uninteresting.words)]
+all.freq <- all.freq[!is.element(names(all.freq), uninteresting.words)]
 
 
-# Observations
-# Hamilton used "well-grounded"
+n.words <- 50
+top.ham.words <- names(ham.freq)[1:n.words]
+top.mad.words <- names(mad.freq)[1:n.words]
+top.jay.words <- names(jay.freq)[1:n.words]
+top.words <- names(all.freq)[1:n.words]
+
+
+words <- top.ham.words
+words.author <- "hamilton "
+
+use.author <- "hamilton "
+interest.words <- ham.words
+non.interest.words <- c(jay.words, mad.words)
+
+
+log.odds.ratio <- rep(0, n.words)
+se <- rep(0, n.words)
+
+for(i in 1:length(top.words)) {
+  word <- words[i]
+   
+  p.interest <- sum(interest.words==word)/length(interest.words)
+  p.non.interest <-  sum(non.interest.words==word) /
+    length(non.interest.words)
+  
+  odds.ratio <- p.interest/(1-p.interest)
+  odds.ratio <- odds.ratio / (p.non.interest/(1-p.non.interest))
+  
+  log.odds.ratio[i] <- log(odds.ratio)
+  
+  se[i] <- 
+    1/sum(interest.words == word) + 
+    1/sum(interest.words != word) +
+    1/sum(non.interest.words == word) + 
+    1/sum(non.interest.words != word)
+  se[i] <- sqrt(se[i])
+}
+
+top.words.data <- data.frame(words=words, log.odds.ratio=log.odds.ratio,
+                             se=se)
+top.words.data$words <- 
+  factor(top.words.data$words, levels=rev(top.words.data$words))
+
+limits <- aes(ymax = log.odds.ratio + 1.96*se, ymin=log.odds.ratio - 1.96*se)
+dodge <- position_dodge(width=0.9)
+
+ggplot(top.words.data, aes(x=words,y=log.odds.ratio)) + 
+  geom_bar(stat="identity") + 
+  theme(text = element_text(size=20), 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  geom_errorbar(limits, position=dodge, width=0.25, col="red") + 
+  geom_point(col="red", size=3) + 
+  labs(
+    x=sprintf("top %i %snon-uninteresting words (in order of use)", n.words, words.author),
+    y=sprintf("log odds ratio of %suse vs rest use", use.author),
+    title=sprintf("Use of Non-Uninteresting Words in %i Authorship-Undisputed Federalist Papers", 
+                  length(undisputed))
+    ) + coord_flip()
+
+
+
+
+

@@ -8,6 +8,12 @@
 # contains the two conflicting list of authors of the papers
 #
 
+# Libraries need for text processing
+library(openNLP) ## Loads the package for use in the task
+library(openNLPmodels.en) ## Loads the model files for the English language
+library(NLP)
+
+
 # Input document: multiple line document
 fed.papers <- scan("pg1404.txt", "character", sep="\n", blank.lines.skip = FALSE)
 
@@ -139,6 +145,68 @@ for (i in 1:n.essays) {
 
 
 #
+# Store in nested tree/list structures the
+# paragraph <- sentence <- word <- character counts
+# Note:
+# -sentences are cut using sentence token annotator function from package
+# -all words dropped to lower case for counting purposes
+# -words are assumed to be delineated by spaces
+# -all punctuation dropped to count words.  This is an issue for Hamilton in
+#  particular since he used words like "well-behaved" a few times
+#
+# Rename variable
+fed.papers <- fed.papers.list
+
+par.count <- sen.count <- word.count <- char.count <- 
+  vector(length=n.essays, mode="list")
+
+# Sentence tokenizer
+sent_token_annotator <- Maxent_Sent_Token_Annotator()
+
+for (i in 1:n.essays) {
+  essay <- fed.papers[[i]]
+  n.par <- length(essay)
+  par.count[[i]] <- n.par
+  
+  # Further nested lists
+  sen.count[[i]] <- word.count[[i]] <- char.count[[i]] <-
+    vector(length=n.par, mode="list")  
+  
+  for (j in 1:n.par) {
+    par <- as.String(essay[[j]])
+    annotation <- annotate(par, sent_token_annotator)
+    sentences <- par[annotation]
+    n.sen <- length(sentences)
+    sen.count[[i]][[j]] <- n.sen
+    
+    # Further nested lists
+    word.count[[i]][[j]] <- char.count[[i]][[j]] <- 
+      vector(length=n.sen, mode="list") 
+    
+    for (k in 1:n.sen) {
+      sen <- sentences[[k]]
+      sen <- tolower(sen)
+      sen <- gsub("[[:punct:]]", " ", sen)
+      words <- unlist(strsplit(sen, " "))
+      words <- words[!words == ""]
+      words <- words[!words == " "]
+      
+      n.words <- length(words)
+      word.count[[i]][[j]][[k]] <- n.words
+      
+      # Further nested lists
+      char.count[[i]][[j]][[k]] <- 
+        vector(length=n.words, mode="list")
+      
+      for (l in 1:n.words){
+        char.count[[i]][[j]][[k]][[l]] <- nchar(words[l])
+      }
+    }
+  }
+}
+
+
+#
 # Create data.frame of authors, disputed authors, and undisputed authors
 #
 hamilton.list <- 
@@ -180,5 +248,5 @@ authors.array <- data.frame(essay=1:n.essays, hamilton=hamilton.list,
 #
 # Save objects of interest
 #
-fed.papers <- fed.papers.list
-save(file="federalist.RData", authors.array, fed.papers)
+save(file="federalist.RData", authors.array, fed.papers, par.count, sen.count,
+     word.count, char.count)
