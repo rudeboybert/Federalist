@@ -119,3 +119,4 @@ Interestingly, Hamilton uses the word "I" a lot more, also about "laws", "courts
 I still need to
 * Sanity check this code
 * Figure out what to do about plurals:  states vs state
+* Consider using LDA: latent dirichlet analysis: http://www.r-bloggers.com/xkcd-a-webcomic-of-the-internet-small-talk-meta-discussions-and-whimsical-phantasmagoria/
