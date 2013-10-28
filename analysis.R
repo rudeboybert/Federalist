@@ -262,5 +262,19 @@ ggplot(top.words.data, aes(x=words,y=log.odds.ratio)) +
 
 
 
+test.kind <- lapply(fed.papers[undisputed], function(x){grepl("kind of", x)})
+test.kind <- lapply(fed.papers[undisputed], function(x){grepl("this kind", x)})
+test.kind <- lapply(fed.papers[undisputed], function(x){grepl("a kind", x)})
+test.kind <- lapply(fed.papers[undisputed], function(x){grepl("a kind of", x)})
+
+test.kind <- lapply(fed.papers[undisputed], function(x){grepl(" kind ", x)})
+
+authors[which(unlist(lapply(test.kind, any)))]
+
+
+
+which(unlist(lapply(test.kind, any)))
+i <- 11
+fed.papers[[undisputed[i]]][which(test.kind[[i]])]
 
 
