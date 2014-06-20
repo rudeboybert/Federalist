@@ -1,7 +1,7 @@
 Federalist Papers Analysis
 ========================================================
 We perform analysis on the 85 essays comprising the Federalist Papers using the
-following packages.  
+following packages.
 
 
 ```r
@@ -16,7 +16,7 @@ load("federalist.RData")
 Word Cloud of Non-Stop Words
 --------------------------------------------------------
 We display a word cloud of the non-stop words (I, me, and, them, etc.) used in the 85 essays.  No surprises.  
-<img src="./README_files/figure-html/unnamed-chunk-3.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" width="480" />
+![plot of chunk unnamed-chunk-3](./README_files/figure-html/unnamed-chunk-3.png) 
 
 
 Latent Dirichlet Allocation
@@ -41,13 +41,13 @@ The four topics appear to relate to
 
 For each of the 4 topics, we present the topic distribution of the 2 documents with the highest proprotion for that topic.  
 
-<img src="./README_files/figure-html/unnamed-chunk-5.png" title="plot of chunk unnamed-chunk-5" alt="plot of chunk unnamed-chunk-5" width="768" />
+![plot of chunk unnamed-chunk-5](./README_files/figure-html/unnamed-chunk-5.png) 
 
 
 Log-odds of word use for certain authors vs others
 --------------------------------------------------------
 For the 69 essays whose authorship is not dispute, we analyse the usage of the top 25 words Hamilton used by comparing the log-odds ratio of Hamilton vs Madison & Jay's use of that word, as measure by the proportion.  The red error bars a 95% percent confidence intervals based on an asymptotic approximation of the standard error.  
-<img src="./README_files/figure-html/unnamed-chunk-6.png" title="plot of chunk unnamed-chunk-6" alt="plot of chunk unnamed-chunk-6" width="1152" />
+![plot of chunk unnamed-chunk-6](./README_files/figure-html/unnamed-chunk-6.png) 
 Even though the words "states" and "government" were the top two words used by Hamilton, Hamilton used it far less proportionally than Jay and Madison.  Interestingly Hamilton used the word "I" at a much higher rate than the others.  
 
 

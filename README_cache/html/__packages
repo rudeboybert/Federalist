@@ -3,6 +3,7 @@ ggplot2
 lda
 NLP
 RColorBrewer
+Rcpp
 reshape2
 tm
 wordcloud

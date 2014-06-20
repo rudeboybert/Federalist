@@ -1,10 +1,14 @@
 ---
-output: html_document
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    keep_md: yes
 ---
 Federalist Papers Analysis
 ========================================================
 We perform analysis on the 85 essays comprising the Federalist Papers using the
-following packages.  
+following packages.
 
 ```{r, echo=TRUE, message=FALSE, cache=TRUE}
 library(tm); library(ggplot2); library(wordcloud); library(lda); library(reshape2)
@@ -15,7 +19,7 @@ load("federalist.RData")
 ```{r, echo=FALSE, message=FALSE, cache=TRUE}
 # Load corpus and clean up
 corpus <- Corpus(DirSource("./essays/"), readerControl = list(language="english"))
-corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, tolower)
 corpus <- tm_map(corpus, removeNumbers)
 corpus <- tm_map(corpus, removePunctuation)
 corpus <- tm_map(corpus, stripWhitespace)
