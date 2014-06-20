@@ -1,6 +1,3 @@
----
-output: html_document
----
 Federalist Papers Analysis
 ========================================================
 We perform analysis on the 85 essays comprising the Federalist Papers using the
