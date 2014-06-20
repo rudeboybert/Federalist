@@ -177,10 +177,10 @@ madison.list <-
     "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", 
     "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON"
   )
-authors <- data.frame(hamilton=hamilton.list, madison=madison.list, 
+authors.list <- data.frame(hamilton=hamilton.list, madison=madison.list, 
                       listed=listed.authors)
 
 
 # Save objects of interest
 fed.papers <- fed.papers.list
-save(file="federalist.RData", authors, fed.papers)
+save(file="federalist.RData", authors.list, fed.papers)
