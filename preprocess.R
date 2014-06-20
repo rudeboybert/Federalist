@@ -1,214 +1,150 @@
-#
-# This R script preprocesses the following document:
-# http://thomas.loc.gov/home/histdox/fedpaper.txt
-# containing the Federalist Papers for analysis in R
-#
-# Page 5 of 
-# http://writing.mit.edu/sites/writing.mit.edu/files/Who%20Wrote%20the%20Federalist%20Papers.pdf
-# contains the two conflicting list of authors of the papers
-#
-
-# Libraries need for text processing
-library(openNLP) ## Loads the package for use in the task
-library(openNLPmodels.en) ## Loads the model files for the English language
-library(NLP)
+# Preprocess the Federalist Papers contained in pg1404.txt from the Project
+# Gutenberg
 
 
 # Input document: multiple line document
-fed.papers <- scan("pg1404.txt", "character", sep="\n", blank.lines.skip = FALSE)
+fed.papers <- scan("pg1404.txt", "character", sep="\n", 
+                   blank.lines.skip = FALSE)
+n.lines <- length(fed.papers)
 
 
-#
-# First pass to identify starting and ending line of each essay
-#
-essay.starts <- NULL
-for (i in 1:length(fed.papers)) {
-  if (substr(fed.papers[i], 1, nchar("FEDERALIST No.")) == "FEDERALIST No.") {    
-    essay.starts <- c(essay.starts, i)
+# Identify starting and ending line of each essay
+n.essays <- 85
+essay.index <- data.frame(start=rep(0, n.essays), end=rep(0, n.essays))
+counter <- 1
+
+query <- "FEDERALIST No."
+for (i in 1:n.lines) {
+  if (substr(fed.papers[i], 1, nchar(query)) == query) {    
+    essay.index$start[counter] <- i
+    counter <- counter + 1
   }
 }
-essay.ends <- essay.starts - 1
-essay.ends <- essay.ends[-1]
-essay.ends <- c(essay.ends, length(fed.papers))
-essay.index <- cbind(essay.starts, essay.ends)
-
-# 85 essays total
-n.essays <- nrow(essay.index)
+essay.index$end[1:(n.essays-1)] <- essay.index$start[2:n.essays] - 1
+essay.index$end[n.essays] <- n.lines
 
 
-#
-# Identify 
-# -Which line has "To the People of the State of New York" intro (if at all)
-# -Which line has Publius signature
-# -Listed author
-#
-new.york.text <- "To the People of the State of New York"
-has.new.york.text <- rep(0, n.essays)
-has.publius <- rep(0, n.essays)
-
+# For each essay:
+# -ID author
+# -Cut all text upto & including the "To the People of the State of New York:"
+# line and including and after the "PUBLIUS" line. We leverage the fact that all
+# 85 essays started with this NY line, and all but essay 37 ended with the
+# PUBLIUS signature.  Note all footnotes are therefore removed.
+NY.text <- "To the People of the State of New York:"
+fed.papers.list <- vector(n.essays, mode="list")
 listed.authors <- rep("", n.essays)
 possible.authors <- c("HAMILTON", "JAY", "MADISON", "HAMILTON OR MADISON", 
                       "MADISON, with HAMILTON")
 
 for (i in 1:n.essays) {
-  indices <- essay.index[i, 1] : essay.index[i, 2]
-  essay.text <- fed.papers[indices]
+  # Get text corresponding to that essay
+  essay.text <- fed.papers[essay.index[i, 1]:essay.index[i, 2]]
   
-  for (j in 1:length(essay.text)) {
-    # ID intro to people of NY line
-    if(substr(essay.text[j], 1, nchar(new.york.text)) == new.york.text) {
-      has.new.york.text[i] <- 1
-    }
-    
-    # ID Publius line
-    if(length(grep("PUBLIUS", essay.text[j], fixed=TRUE)) != 0) {
-      has.publius[i] <- 1
-    } 
-    
-    # ID Listed author
+  # ID listed author and starting and ending indices of the essay
+  for(j in 1:length(essay.text)) {
     if(is.element(essay.text[j], possible.authors)) {
       listed.authors[i] <- essay.text[j]  
     }
-  }  
-}
-
-
-#
-# Cut all text
-# -Prior to "To the People of the State of New York:" line
-# -After Publius signature
-# We leverage the fact that all 85 essays started with this intro, and all but
-# essay 37 ended with the Publius signature.  Note all footnotes are therefore 
-# removed.  
-#
-# We then cut up each essay into paragraphs, and store each paragraphs 
-# separately.  Then store in new list 'fed.papers.list'. 
-#
-fed.papers.list <- vector(n.essays, mode="list")
-
-for (i in 1:n.essays) {
-  # Get text corresponding to that essay
-  indices <- essay.index[i, 1]:essay.index[i, 2]
-  essay.text <- fed.papers[indices]
-  
-  # ID starting and ending indices of the essay
-  start.index <- 0
-  end.index <- 0
-  for(j in 1:length(essay.text)) {
-    if(substr(essay.text[j], 1, nchar(new.york.text)) == new.york.text) {
-      start.index <- j + 1
+    if(substr(essay.text[j], 1, nchar(NY.text)) == NY.text) {
+      start.index <- j
     }
     if(length(grep("PUBLIUS", essay.text[j], fixed=TRUE)) != 0) {
       end.index <- j
     }   
   }
-
-  # Essay 37 was not signed
+  # Note essay 37 was not signed PUBLIUS
   if(i == 37) {
     end.index <- length(essay.text)
   } 
   
-  # Drop Publius line
+  # Drop "To the People of the State of New York" and "PUBLIUS" lines and 
+  # leading/trailing whitespace lines
+  if (substr(essay.text[start.index], 1, nchar(NY.text)) == NY.text ) {
+    start.index <- start.index + 1
+  } 
+  while(essay.text[start.index] == "")
+    start.index <- start.index + 1
   if (substr(essay.text[end.index], 1, nchar("PUBLIUS")) == "PUBLIUS" ) {
     end.index <- end.index - 1
   } 
-  
-  # Pare down text
+  while(essay.text[end.index] == "")
+    end.index <- end.index - 1
+
+  # Pare down essay
   essay.text <- essay.text[start.index:end.index]
   
-  # Remove all possible leading and trailing blank lines
-  while(essay.text[1] == "")
-    essay.text <- essay.text[-1]
-  
-  while(essay.text[length(essay.text)] == "")
-    essay.text <- essay.text[-length(essay.text)]  
-  
-  # Determine number of paragraphs
-  n.paragraphs <- sum(essay.text == "") + 1  
-  
-  # Determine which lines start and end each paragraph
-  paragraph.starts <- c(1, which(essay.text == "") + 1)
-  paragraph.ends <- c(which(essay.text == "") - 1, length(essay.text))
-  
-  paragraph.ends <- paragraph.starts - 1
-  paragraph.ends <- c(paragraph.ends, length(essay.text))
-  paragraph.ends <- paragraph.ends[-1]
-
-  # Store paragraphs in a list
-  paragraphs <- vector(n.paragraphs, mode="list")
-  for(j in 1:n.paragraphs) {
-    paragraphs[j] <- 
-      paste(essay.text[paragraph.starts[j]:paragraph.ends[j]], collapse=" ")
-  }
-  fed.papers.list[[i]] <- paragraphs
+  # Write to file and save to list
+  write(essay.text, file=sprintf("./essays/essay%02d.txt", i))
+  fed.papers.list[[i]] <- essay.text
 }
 
 
-#
-# Store in nested tree/list structures the
-# paragraph <- sentence <- word <- character counts
-# Note:
-# -sentences are cut using sentence token annotator function from package
-# -all words dropped to lower case for counting purposes
-# -words are assumed to be delineated by spaces
-# -all punctuation dropped to count words.  This is an issue for Hamilton in
-#  particular since he used words like "well-behaved" a few times
-#
-# Rename variable
-fed.papers <- fed.papers.list
+# #
+# # Store in nested tree/list structures the
+# # paragraph <- sentence <- word <- character counts
+# # Note:
+# # -sentences are cut using sentence token annotator function from package
+# # -all words dropped to lower case for counting purposes
+# # -words are assumed to be delineated by spaces
+# # -all punctuation dropped to count words.  This is an issue for Hamilton in
+# #  particular since he used words like "well-behaved" a few times
+# #
+# # Rename variable
+# fed.papers <- fed.papers.list
+# 
+# par.count <- sen.count <- word.count <- char.count <- 
+#   vector(length=n.essays, mode="list")
+# 
+# # Sentence tokenizer
+# sent_token_annotator <- Maxent_Sent_Token_Annotator()
+# 
+# for (i in 1:n.essays) {
+#   essay <- fed.papers[[i]]
+#   n.par <- length(essay)
+#   par.count[[i]] <- n.par
+#   
+#   # Further nested lists
+#   sen.count[[i]] <- word.count[[i]] <- char.count[[i]] <-
+#     vector(length=n.par, mode="list")  
+#   
+#   for (j in 1:n.par) {
+#     par <- as.String(essay[[j]])
+#     annotation <- annotate(par, sent_token_annotator)
+#     sentences <- par[annotation]
+#     n.sen <- length(sentences)
+#     sen.count[[i]][[j]] <- n.sen
+#     
+#     # Further nested lists
+#     word.count[[i]][[j]] <- char.count[[i]][[j]] <- 
+#       vector(length=n.sen, mode="list") 
+#     
+#     for (k in 1:n.sen) {
+#       sen <- sentences[[k]]
+#       sen <- tolower(sen)
+#       sen <- gsub("[[:punct:]]", " ", sen)
+#       words <- unlist(strsplit(sen, " "))
+#       words <- words[!words == ""]
+#       words <- words[!words == " "]
+#       
+#       n.words <- length(words)
+#       word.count[[i]][[j]][[k]] <- n.words
+#       
+#       # Further nested lists
+#       char.count[[i]][[j]][[k]] <- 
+#         vector(length=n.words, mode="list")
+#       
+#       for (l in 1:n.words){
+#         char.count[[i]][[j]][[k]][[l]] <- nchar(words[l])
+#       }
+#     }
+#   }
+# }
 
-par.count <- sen.count <- word.count <- char.count <- 
-  vector(length=n.essays, mode="list")
 
-# Sentence tokenizer
-sent_token_annotator <- Maxent_Sent_Token_Annotator()
-
-for (i in 1:n.essays) {
-  essay <- fed.papers[[i]]
-  n.par <- length(essay)
-  par.count[[i]] <- n.par
-  
-  # Further nested lists
-  sen.count[[i]] <- word.count[[i]] <- char.count[[i]] <-
-    vector(length=n.par, mode="list")  
-  
-  for (j in 1:n.par) {
-    par <- as.String(essay[[j]])
-    annotation <- annotate(par, sent_token_annotator)
-    sentences <- par[annotation]
-    n.sen <- length(sentences)
-    sen.count[[i]][[j]] <- n.sen
-    
-    # Further nested lists
-    word.count[[i]][[j]] <- char.count[[i]][[j]] <- 
-      vector(length=n.sen, mode="list") 
-    
-    for (k in 1:n.sen) {
-      sen <- sentences[[k]]
-      sen <- tolower(sen)
-      sen <- gsub("[[:punct:]]", " ", sen)
-      words <- unlist(strsplit(sen, " "))
-      words <- words[!words == ""]
-      words <- words[!words == " "]
-      
-      n.words <- length(words)
-      word.count[[i]][[j]][[k]] <- n.words
-      
-      # Further nested lists
-      char.count[[i]][[j]][[k]] <- 
-        vector(length=n.words, mode="list")
-      
-      for (l in 1:n.words){
-        char.count[[i]][[j]][[k]][[l]] <- nchar(words[l])
-      }
-    }
-  }
-}
-
-
-#
-# Create data.frame of authors, disputed authors, and undisputed authors
-#
+# Create data.frame of authors, disputed authors, and undisputed authors. Page 5
+# of the following document contains the two conflicting list of authors of the
+# papers
+# http://writing.mit.edu/sites/writing.mit.edu/files/Who%20Wrote%20the%20Federalist%20Papers.pdf
 hamilton.list <- 
   c("HAMILTON", "JAY", "JAY", "JAY", "JAY", "HAMILTON", "HAMILTON", 
     "HAMILTON", "HAMILTON", "MADISON", "HAMILTON", "HAMILTON", "HAMILTON", 
@@ -241,12 +177,10 @@ madison.list <-
     "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", 
     "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON", "HAMILTON"
   )
-authors.array <- data.frame(essay=1:n.essays, hamilton=hamilton.list, 
-                            madison=madison.list, listed=listed.authors)
+authors <- data.frame(hamilton=hamilton.list, madison=madison.list, 
+                      listed=listed.authors)
 
 
-#
 # Save objects of interest
-#
-save(file="federalist.RData", authors.array, fed.papers, par.count, sen.count,
-     word.count, char.count)
+fed.papers <- fed.papers.list
+save(file="federalist.RData", authors, fed.papers)
