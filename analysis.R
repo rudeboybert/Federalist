@@ -1,5 +1,4 @@
-library(tm); library(ggplot2); library(wordcloud); library(lda)
-library(reshape2); library(openNLP)
+library(tm); library(ggplot2); library(wordcloud); library(lda); library(reshape2)
 
 
 #-------------------------------------------------------------------------------
@@ -56,7 +55,7 @@ beta <- 0.1
 
 dtm <- DocumentTermMatrix(corpus)
 vocab <- colnames(dtm)
-doc.list <- vector("list", length=n.essays)
+doc.list <- vector("list", length=length(corpus))
 for(i in 1:length(corpus)) {
   doc.list[i] <- lexicalize(paste(fed.papers[[i]], collapse=""), lower=TRUE, vocab=vocab)
 }
@@ -213,12 +212,10 @@ for(i in 1:length(words.of.interest)) {
     1/sum(rest.words == word) + 
     1/sum(rest.words != word)
   SE[i] <- sqrt(SE[i])
-  
-  print(c(sum(author.words == word), sum(rest.words == word)))
 }
 
-top.words.data <- data.frame(words=words, log.odds.ratio=log.odds.ratio,
-                             SE=SE)
+top.words.data <- data.frame(words=words.of.interest, 
+                             log.odds.ratio=log.odds.ratio,SE=SE)
 top.words.data$words <- 
   factor(top.words.data$words, levels=rev(top.words.data$words))
 
