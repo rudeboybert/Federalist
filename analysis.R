@@ -1,10 +1,113 @@
-#
 # Analysis on Federalist Papers
-#
+
+
+
+# # Libraries need for text processing
+# library(openNLP) ## Loads the package for use in the task
+# library(openNLPmodels.en) ## Loads the model files for the English language
+# library(NLP)
+
+
+
+corpus <- Corpus(DirSource("./essays/"), readerControl = list(language="english"))
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, tolower)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+# corpus <- tm_map(corpus, stemDocument)
+sort(stopwords("english"))
+
+corpus <- tm_map(corpus, removeWords, c("will", "may", "can", "might", "shall",
+                                        "must", "one", "upon"))
+inspect(corpus[85])
+
+library(wordcloud)
+wordcloud(corpus, scale=c(5,0.5), max.words=25, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, "Dark2"))
+
+dtm <- DocumentTermMatrix(corpus)
+vocab <- dtm_to_vocab(dtm)
+
+freq <- colSums(as.matrix(dtm))
+
+
+documents <- 
+
+
+doc.list <- vector("list", length=85)
+
+for(i in 1:85) {
+  doc <- as.matrix(dtm)[i,]
+  indices <- which(doc!=0)
+  doc <- doc[indices]
+  doc.list[i] <- lexicalize(paste(fed.papers[[i]], collapse=""), lower=TRUE, vocab=vocab)
+}
+
+require("reshape2")
+
+K <- 5
+result <- lda.collapsed.gibbs.sampler(doc.list, K, vocab, 50, 0.1, 0.1, compute.log.likelihood=TRUE) 
+
+top.words <- top.topic.words(result$topics, 5, by.score=TRUE)
+
+## Number of documents to display
+N <- 9
+
+topic.proportions <- t(result$document_sums) / colSums(result$document_sums)
+
+sample <- sample(1:dim(topic.proportions)[1], N)
+topic.proportions <-
+  topic.proportions[sample,]
+topic.proportions[is.na(topic.proportions)] <-  1 / K
+
+colnames(topic.proportions) <- apply(top.words, 2, paste, collapse=" ")
+
+topic.proportions.df <- melt(cbind(data.frame(topic.proportions),
+                                   document=factor(1:N)),
+                             variable.name="topic",
+                             id.vars = "document")  
+
+
+
+qplot(topic, value, fill=document, ylab="proportion",
+      data=topic.proportions.df, stat="identity") +
+  coord_flip() +
+  facet_wrap(~ document, ncol=3)
+
+
+
++
+  opts(axis.text.x = theme(angle=90, hjust=1)) 
+
+
+
+
+
 
 library(ggplot2)
 load("federalist.RData")
 n.essays <- length(fed.papers)
+
+
+library(tm)
+get_corpus <- function(path) {
+  old_directory <- getwd()
+  new_directory <- as.character(path) # Making sure it's a string
+  setwd(new_directory)
+  corpus <- Corpus(DirSource(getwd()), readerControl = list(language="english"))
+  corpus <- tm_map(corpus, removeNumbers)
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, stripWhitespace)
+  corpus <- tm_map(corpus, tolower)
+  corpus <- tm_map(corpus, removeWords, stopwords("english"))
+  corpus <- tm_map(corpus, stemDocument, language="english")
+  corpus
+}
+corpus <- get_corpus("./essays/")
+dtm <- get_dtm_matrix(corpus)
+
+
 
 #
 # Focus for now on 69 out of 85 essays whose authorship is not disputed
