@@ -37,9 +37,9 @@ The four topics appear to relate to
 1. Democracy
 2. The relationship between the state and federal governments
 3. Military affairs
-4. he executive branch of the government.  
+4. The executive branch of the government.  
 
-For each of the 4 topics, we present the topic distribution of the 2 documents with the highest proprotion for that topic.  
+For each of the 4 topics, we present the topic distribution of the 2 documents with the highest proprotion for that topic, with the essay number as the header.  
 
 ![plot of chunk unnamed-chunk-5](./README_files/figure-html/unnamed-chunk-5.png) 
 

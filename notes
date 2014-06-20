@@ -15,18 +15,3 @@ Paper on the authorship:
 # contains the two conflicting list of authors of the papers
 
 Words that are paired with similar words:  http://slackprop.wordpress.com/2013/06/03/on-geek-versus-nerd/
-
-Book recommended by Katy McKinney-Bock about statistical linguistics
-His name is Harald Baayen, and he is at the University of Alberta. Actually, a draft of his book is available in PDF from his website (doing a quick search); do with it what you like: http://www.ualberta.ca/~baayen/publications/baayenCUPstats.pdf
-
-
-p1 <- 0.49
-p2 <- p1*2
-
-log(p1/p2)
-log((p1/(1-p1))/(p2/(1-p2)))
-
-# How much did Hamilton use a word?
-
-# How much did Hamilton use a word vs everybody else, where words that are used
-# more frequently are given more weight.  
