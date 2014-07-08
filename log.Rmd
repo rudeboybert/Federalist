@@ -1,0 +1,33 @@
+---
+title: "log"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+
+2014/06/26
+-------------------------------------------------------------------------------
+Links:
+
+* [Generative vs discriminative classifiers](http://robotics.stanford.edu/~ang/papers/nips01-discriminativegenerative.pdf)
+
+To think about:
+
+* diFinetti's Theorem and exchangeability
+* Why is the latent of LDA such an improvement?
+
+Previously
+-------------------------------------------------------------------------------
+Notes:
+
+* Federalist 10 & 51 have to do with factions.  How despite what Montesquieu argued in his "The Spirit of the Laws", republican government CAN work for a large hetereogeneous population, since the bigger the nation, the more room for factions whose interests can offset each other.
+* Federalist 39:  jurisdiction of the national government extends to certain enumerated objects only and leave to the several states a residuary and inviolable sovereignty over all other object 
+* Federalist 45:  The powers delegated by the proposed Constitution to the federal government are 
+few and defined.
+
+Links:
+
+* [Paper on the authorship problem](http://www.jstor.org/discover/10.2307/1921883?uid=3739856&uid=2&uid=4&uid=3739256&sid=21102801775621)
+* Page 5 of [this document](http://writing.mit.edu/sites/writing.mit.edu/files/Who%20Wrote%20the%20Federalist%20Papers.pdf contains the two conflicting list of authors of the papers)
+* [Words that are paired with similar words](http://slackprop.wordpress.com/2013/06/03/on-geek-versus-nerd/)

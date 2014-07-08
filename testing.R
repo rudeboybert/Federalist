@@ -1,22 +1,12 @@
----
-output:
-  html_document:
-    keep_md: yes
-  pdf_document: default
----
-Federalist Papers Analysis
-========================================================
-We perform analysis on the 85 essays comprising the Federalist Papers using the
-following packages.
 
-```{r, echo=TRUE, message=FALSE, cache=TRUE}
+## ----, echo=TRUE, message=FALSE, cache=TRUE------------------------------
 library(tm); library(ggplot2); library(wordcloud); library(lda); 
 library(reshape2); library(SnowballC)
 source("preprocess.R")
 load("federalist.RData")
-```
 
-```{r, echo=FALSE, message=FALSE, cache=TRUE}
+
+## ----, echo=FALSE, message=FALSE, cache=TRUE-----------------------------
 # Load corpus and clean up
 corpus <- Corpus(DirSource("./essays"), readerControl = list(language="en"))
 corpus <- tm_map(corpus, tolower)
@@ -33,25 +23,16 @@ corpus <- tm_map(corpus, removeWords, remove)
 
 # Clean up
 corpus <- tm_map(corpus, PlainTextDocument)
-```
 
 
-Word Cloud of Non-Stop Words
---------------------------------------------------------
-We display a word cloud of the non-stop words (I, me, and, them, etc.) used in the 85 essays.  No surprises.  
-```{r, echo=FALSE, cache=TRUE, fig.width=5, fig.height=5}
+## ----, echo=FALSE, cache=TRUE, fig.width=5, fig.height=5-----------------
 # Create word cloud
 set.seed(76)
 wordcloud(corpus, scale=c(5,0.5), max.words=25, random.order=FALSE, 
           rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, "BuPu"))
-```
 
 
-Latent Dirichlet Allocation
---------------------------------------------------------
-We run the Latent Dirchlet Allocation method on the essays setting 4 topics for
-10000 simulations.  For each topic (columns) we post the top 5 words in terms of their probabilities.  
-```{r, echo=FALSE, cache=TRUE}
+## ----, echo=FALSE, cache=TRUE--------------------------------------------
 #---------------------------------------------------------------
 # Run method
 #---------------------------------------------------------------
@@ -72,6 +53,10 @@ for(i in 1:length(corpus)) {
 result <- lda.collapsed.gibbs.sampler(doc.list, n.topics, vocab, n.sim, alpha, beta, 
                               compute.log.likelihood=TRUE)
 
+# Topics in terms of words
+topics <- result$topics
+
+
 # Top words for each topic
 top.words <- top.topic.words(topics, n.top.words, by.score=TRUE)
 top.words
@@ -80,17 +65,9 @@ top.words
 topic.proportions <- t(result$document_sums) / colSums(result$document_sums)
 colnames(topic.proportions) <- apply(top.words, 2, paste, collapse=" ")
 rownames(topic.proportions) <- 1:length(corpus)
-```
-The four topics appear to relate to 
 
-1. Democracy
-2. The relationship between the state and federal governments
-3. Military affairs
-4. The executive branch of the government.  
 
-For each of the 4 topics, we present the topic distribution of the 2 documents with the highest proprotion for that topic, with the essay number as the header.  
-
-```{r, echo=FALSE, cache=TRUE, fig.width=8, fig.height=6}
+## ----, echo=FALSE, cache=TRUE, fig.width=8, fig.height=6-----------------
 #---------------------------------------------------------------
 # For each of the topics, identify the two documents with the highest topic
 # proportion allocated to is
@@ -113,13 +90,9 @@ ggplot(topic.proportions,
   aes(x = factor(topic), y=value, fill=topic)) + geom_bar(stat = "identity") +
   ylab("proportion") + xlab("topic") + facet_wrap(~ document, ncol=2) + 
   theme(legend.position="none") + coord_flip()
-```
 
 
-Log-odds of word use for certain authors vs others
---------------------------------------------------------
-For the 69 essays whose authorship is not dispute, we analyse the usage of the top 25 words Hamilton used by comparing the log-odds ratio of Hamilton vs Madison & Jay's use of that word, as measure by the proportion.  The red error bars a 95% percent confidence intervals based on an asymptotic approximation of the standard error.  
-```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE, fig.height=8, fig.width=12}
+## ----, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE, fig.height=8, fig.width=12----
 load("federalist.RData")
 n.essays <- length(fed.papers)
 names(fed.papers) <- 1:n.essays
@@ -250,9 +223,5 @@ ggplot(top.words.data, aes(x=words,y=log.odds.ratio)) +
     y=sprintf("log odds ratio of %s use vs rest use", author),
     title="Comparison of Word Use in Undisputed Essays"
   )
-```
-Even though the words "states" and "government" were the top two words used by Hamilton, Hamilton used it far less proportionally than Jay and Madison.  Interestingly Hamilton used the word "I" at a much higher rate than the others.  
-
-
 
 
