@@ -56,7 +56,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="federalist-papers-analysis" class="section level1">
 <h1>Federalist Papers Analysis</h1>
 <p>We perform analysis on the 85 essays comprising the Federalist Papers using the following packages.</p>
-<pre class="r"><code>library(tm); library(ggplot2); library(wordcloud); library(lda); library(reshape2)
+<pre class="r"><code>library(tm); library(ggplot2); library(wordcloud); library(lda); 
+library(reshape2); library(SnowballC)
 source(&quot;preprocess.R&quot;)
 load(&quot;federalist.RData&quot;)</code></pre>
 <div id="word-cloud-of-non-stop-words" class="section level2">
@@ -66,12 +67,12 @@ load(&quot;federalist.RData&quot;)</code></pre>
 <div id="latent-dirichlet-allocation" class="section level2">
 <h2>Latent Dirichlet Allocation</h2>
 <p>We run the Latent Dirchlet Allocation method on the essays setting 4 topics for 10000 simulations. For each topic (columns) we post the top 5 words in terms of their probabilities.</p>
-<pre><code>##      [,1]         [,2]        [,3]       [,4]         
-## [1,] &quot;public&quot;     &quot;state&quot;     &quot;military&quot; &quot;executive&quot;  
-## [2,] &quot;people&quot;     &quot;authority&quot; &quot;nations&quot;  &quot;legislative&quot;
-## [3,] &quot;government&quot; &quot;powers&quot;    &quot;war&quot;      &quot;president&quot;  
-## [4,] &quot;great&quot;      &quot;power&quot;     &quot;armies&quot;   &quot;power&quot;      
-## [5,] &quot;number&quot;     &quot;federal&quot;   &quot;states&quot;   &quot;body&quot;</code></pre>
+<pre><code>##      [,1]       [,2]         [,3]          [,4]       
+## [1,] &quot;nations&quot;  &quot;people&quot;     &quot;executive&quot;   &quot;state&quot;    
+## [2,] &quot;war&quot;      &quot;government&quot; &quot;legislative&quot; &quot;federal&quot;  
+## [3,] &quot;military&quot; &quot;great&quot;      &quot;president&quot;   &quot;states&quot;   
+## [4,] &quot;foreign&quot;  &quot;different&quot;  &quot;power&quot;       &quot;authority&quot;
+## [5,] &quot;armies&quot;   &quot;public&quot;     &quot;senate&quot;      &quot;power&quot;</code></pre>
 <p>The four topics appear to relate to</p>
 <ol style="list-style-type: decimal">
 <li>Democracy</li>
