@@ -117,7 +117,7 @@ ggplot(topic.proportions,
 
 Log-odds of word use for certain authors vs others
 --------------------------------------------------------
-For the 69 essays whose authorship is not dispute, we analyse the usage of the top 25 words Hamilton used by comparing the log-odds ratio of Hamilton vs Madison & Jay's use of that word, as measure by the proportion.  The red error bars a 95% percent confidence intervals based on an asymptotic approximation of the standard error.  
+For the 69 essays whose authorship is not dispute, we analyse the usage of the top 25 words Hamilton used by comparing the log-odds ratio of Hamilton vs Madison & Jay's use of that word, as measure by the proportion.  The red error bars 95% percent confidence intervals based on an asymptotic approximation of the standard error.  
 ```{r, echo=FALSE, cache=TRUE, message=FALSE, warning=FALSE, fig.height=8, fig.width=12}
 load("federalist.RData")
 n.essays <- length(fed.papers)
