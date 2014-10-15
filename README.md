@@ -5,8 +5,7 @@ following packages.
 
 
 ```r
-library(tm); library(ggplot2); library(wordcloud); library(lda); 
-library(reshape2); library(SnowballC)
+library(tm); library(ggplot2); library(wordcloud); library(lda); library(reshape2)
 source("preprocess.R")
 load("federalist.RData")
 ```
@@ -26,12 +25,12 @@ We run the Latent Dirchlet Allocation method on the essays setting 4 topics for
 10000 simulations.  For each topic (columns) we post the top 5 words in terms of their probabilities.  
 
 ```
-##      [,1]       [,2]         [,3]          [,4]       
-## [1,] "nations"  "people"     "executive"   "state"    
-## [2,] "war"      "government" "legislative" "federal"  
-## [3,] "military" "great"      "president"   "states"   
-## [4,] "foreign"  "different"  "power"       "authority"
-## [5,] "armies"   "public"     "senate"      "power"
+##      [,1]         [,2]        [,3]       [,4]         
+## [1,] "public"     "state"     "military" "executive"  
+## [2,] "people"     "authority" "nations"  "legislative"
+## [3,] "government" "powers"    "war"      "president"  
+## [4,] "great"      "power"     "armies"   "power"      
+## [5,] "number"     "federal"   "states"   "body"
 ```
 The four topics appear to relate to 
 
